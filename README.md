@@ -1,7 +1,7 @@
 # Player & Downloader
 Play and download Audio, Video and Photo
 
-<h2>Cara Install</h2><br>
+<h2>Cara Install</h2>
 pkg update && pkg update -y<br>
 termux-setup-storage<br>
 pkg install python mpv yt-dlp ffmpeg socat fzf<br>
