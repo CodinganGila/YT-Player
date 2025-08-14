@@ -1,5 +1,5 @@
-# YT-Player
-Play and download Audio, Video from Youtube
+# Player & Downloader
+Play and download Audio, Video and Photo
 
 <h2>Cara Install</h2><br>
 pkg update && pkg update -y<br>
