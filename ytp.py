@@ -39,12 +39,16 @@ def menu():
 ╔══════════════════════════════════════╗
 ║      🎵  {MAGENTA}Pemutar Musik YouTube{CYAN}       ║
 ╠══════════════════════════════════════╣
-║ {YELLOW}1.{CYAN} Play Music (judul/link)           ║
-║ {YELLOW}2.{CYAN} Play Mix (lagu mirip otomatis)    ║
-║ {YELLOW}3.{CYAN} Play Playlist                     ║
-║ {YELLOW}4.{CYAN} Download Audio                    ║
-║ {YELLOW}5.{CYAN} Download Video                    ║
-║ {YELLOW}0.{CYAN} Keluar                            ║
+║ {YELLOW}1.{CYAN} Play Music (judul/link) Youtube   ║
+║ {YELLOW}2.{CYAN} Play Mix Youtube                  ║
+║ {YELLOW}3.{CYAN} Play Playlist Youtube             ║
+║ {YELLOW}4.{CYAN} Download Audio Youtube            ║
+║ {YELLOW}5.{CYAN} Download Video Youtube            ║
+║ {YELLOW}6.{CYAN} Download Video (All Sites)        ║
+║ {YELLOW}7.{CYAN} Download Audio (All Sites)        ║
+║ {YELLOW}8.{CYAN} Download Music Spotify            ║
+║ {YELLOW}9.{CYAN} Download Photo (All Sites)        ║
+║ {RED}0.{CYAN} Keluar                            ║
 ╚══════════════════════════════════════╝{RESET}
 """)
     return input(f"{BOLD}{GREEN}Pilih opsi: {RESET}")
@@ -152,10 +156,10 @@ def download_audio():
     new_files = after - before
 
     if new_files:
-        os.makedirs("/sdcard/Music", exist_ok=True)
+        os.makedirs("/sdcard/Download/Music", exist_ok=True)
         for file in new_files:
             try:
-                shutil.move(file, f"/sdcard/Music/{file}")
+                shutil.move(file, f"/sdcard/Download/Music/{file}")
                 print(f"{GREEN}✅ Dipindahkan: {file}{RESET}")
             except Exception as e:
                 print(f"{RED}❌ Gagal pindah {file}: {e}{RESET}")
@@ -252,15 +256,141 @@ def download_video():
     new_files = after - before
 
     if new_files:
-        os.makedirs("/sdcard/Movies", exist_ok=True)
+        os.makedirs("/sdcard/Download/Movies", exist_ok=True)
         for file in new_files:
             try:
-                shutil.move(file, f"/sdcard/Movies/{file}")
+                shutil.move(file, f"/sdcard/Download/Movies/{file}")
                 print(f"{GREEN}✅ Dipindahkan: {file}{RESET}")
             except Exception as e:
                 print(f"{RED}❌ Gagal pindah {file}: {e}{RESET}")
     else:
         print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
+
+def download_video_any():
+    inp = input(f"\n{GREEN}⬇️ Masukkan link video : {RESET}").strip()
+    if not inp:
+        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
+        return
+
+    # Simpan file sebelum download
+    before = set(glob.glob("*.mp4"))
+
+    print(f"\n{YELLOW}📽️ Mengunduh video...{RESET}")
+    
+    # Coba format bestvideo+bestaudio dulu
+    result = os.system(f"yt-dlp -f bestvideo+bestaudio --merge-output-format mp4 -o '%(title)s.%(ext)s' '{inp}'")
+    
+    # Jika gagal, coba format best (gabung otomatis jika hanya 1 stream)
+    if result != 0:
+        print(f"{YELLOW}⚠️ Format terpisah tidak tersedia, mencoba format tunggal...{RESET}")
+        os.system(f"yt-dlp -f best --merge-output-format mp4 -o '%(title)s.%(ext)s' '{inp}'")
+
+    # Ambil file setelah download
+    after = set(glob.glob("*.mp4"))
+    new_files = after - before
+
+    if new_files:
+        os.makedirs("/sdcard/Downloas/Movies", exist_ok=True)
+        for file in new_files:
+            try:
+                shutil.move(file, f"/sdcard/Download/Movies/{file}")
+                print(f"{GREEN}✅ Dipindahkan: {file}{RESET}")
+            except Exception as e:
+                print(f"{RED}❌ Gagal pindah {file}: {e}{RESET}")
+    else:
+        print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
+
+def download_audio_any():
+    inp = input(f"\n{GREEN}⬇️ Masukkan link audio/video : {RESET}").strip()
+    if not inp:
+        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
+        return
+
+    # Ambil daftar file sebelum download
+    before = set(glob.glob("*.mp3"))
+
+    print(f"\n{YELLOW}🎵 Mengunduh audio...{RESET}")
+    os.system(f"yt-dlp -x --audio-format mp3 -o '%(title)s.%(ext)s' '{inp}'")
+
+    # Ambil daftar file setelah download
+    after = set(glob.glob("*.mp3"))
+    new_files = after - before
+
+    if new_files:
+        os.makedirs("/sdcard/Download/Music", exist_ok=True)
+        for file in new_files:
+            try:
+                shutil.move(file, f"/sdcard/Download/Music/{file}")
+                print(f"{GREEN}✅ Dipindahkan: {file}{RESET}")
+            except Exception as e:
+                print(f"{RED}❌ Gagal pindah {file}: {e}{RESET}")
+    else:
+        print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
+
+def download_spotify_music():
+    inp = input(f"\n{GREEN}⬇️ Masukkan link Spotify (lagu/playlist/album): {RESET}").strip()
+    if not inp:
+        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
+        return
+
+    # Cek apakah spotdl terpasang
+    try:
+        subprocess.run(["spotdl", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        print(f"{RED}❌ spotdl belum terpasang.{RESET}")
+        print(f"{YELLOW}💡 Install dengan: {CYAN}pip install spotdl{RESET}")
+        return
+    except FileNotFoundError:
+        print(f"{RED}❌ spotdl belum terpasang.{RESET}")
+        print(f"{YELLOW}💡 Install dengan: {CYAN}pip install spotdl{RESET}")
+        return
+
+    # Ambil daftar file sebelum download
+    before = set(glob.glob("*.mp3"))
+
+    print(f"\n{YELLOW}🎵 Mengunduh musik dari Spotify...{RESET}")
+    os.system(f"spotdl '{inp}' --output '{os.getcwd()}/%(title)s.%(ext)s' --bitrate 320k")
+
+    # Ambil daftar file setelah download
+    after = set(glob.glob("*.mp3"))
+    new_files = after - before
+
+    if new_files:
+        os.makedirs("/sdcard/Download/Music", exist_ok=True)
+        for file in new_files:
+            try:
+                shutil.move(file, f"/sdcard/Download/Music/{file}")
+                print(f"{GREEN}✅ Dipindahkan: {file}{RESET}")
+            except Exception as e:
+                print(f"{RED}❌ Gagal pindah {file}: {e}{RESET}")
+    else:
+        print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
+
+def download_photo():
+    inp = input(f"\n{GREEN}⬇️ Masukkan link foto/album: {RESET}").strip()
+    if not inp:
+        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
+        return
+
+    # Cek apakah gallery-dl terpasang
+    try:
+        subprocess.run(["gallery-dl", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(f"{RED}❌ gallery-dl belum terpasang.{RESET}")
+        print(f"{YELLOW}💡 Install dengan: {CYAN}pip install gallery-dl{RESET}")
+        return
+
+    # Buat folder tujuan
+    save_dir = "/sdcard/Download/Photo"
+    os.makedirs(save_dir, exist_ok=True)
+
+    print(f"\n{YELLOW}🖼️ Mengunduh foto...{RESET}")
+    result = os.system(f"gallery-dl -d '{save_dir}' '{inp}'")
+
+    if result == 0:
+        print(f"{GREEN}✅ Foto berhasil diunduh ke: {save_dir}{RESET}")
+    else:
+        print(f"{RED}❌ Gagal mengunduh foto.{RESET}")
 
 
 def main():
@@ -275,7 +405,15 @@ def main():
         elif pilihan == "4":
             download_audio()
         elif pilihan == "5":
-            download_video()            
+            download_video()
+        elif pilihan == "6":
+            download_video_any()
+        elif pilihan == "7":
+            download_audio_any()
+        elif pilihan == "8":
+            download_spotify_music()
+        elif pilihan == "9":
+            download_photo()
         elif pilihan == "0":
             print(f"\n{MAGENTA}👋 Keluar...{RESET}")
             break
@@ -285,4 +423,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
