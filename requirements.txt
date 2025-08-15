@@ -5,3 +5,4 @@ pip install gallery-dl
 pip install termcolor
 pip install pyfiglet
 pip install tabulate
+pip install spotipy
