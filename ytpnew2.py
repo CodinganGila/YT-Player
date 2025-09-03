@@ -7,7 +7,6 @@ import shutil
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-
 # Warna ANSI
 RED = '\033[91m'
 GREEN = '\033[92m'
