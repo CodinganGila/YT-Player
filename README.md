@@ -5,7 +5,7 @@ Play and download Audio, Video and Photo
 pkg update && pkg update -y<br>
 termux-setup-storage<br>
 pkg install python mpv yt-dlp ffmpeg socat fzf<br>
-pip install -r requirements.txt<br>
 git clone https://github.com/CodinganGila/YT-Player<br>
 cd YT-Player<br>
+pip install -r requirements.txt<br>
 python ytp.py
