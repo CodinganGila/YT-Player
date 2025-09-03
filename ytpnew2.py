@@ -96,6 +96,7 @@ def search_youtube(query):
 
     return tampilkan_hasil(hasil)
 
+# 1
 def play_music():
     inp = input(f"\n{GREEN}🎧 Masukkan judul atau link: {RESET}").strip()
     if "youtube.com" in inp or "youtu.be" in inp:
@@ -112,6 +113,7 @@ def play_music():
     else:
         print(f"{RED}❌ Gagal memutar musik.{RESET}")
 
+# 2
 def play_mix_manual():
     judul_awal = input(f"{YELLOW}🎵 Masukkan judul lagu awal: {RESET}").strip()
     try:
@@ -153,6 +155,7 @@ def play_mix_manual():
     except Exception as e:
         print(f"{RED}❌ Terjadi kesalahan: {str(e)}{RESET}")
 
+# 3
 def play_playlist():
     url = input(f"{YELLOW}📜 Masukkan link playlist YouTube: {RESET}").strip()
     if "playlist" in url or "list=" in url:
@@ -172,6 +175,120 @@ def play_playlist():
     else:
         print(f"{RED}⚠️  Bukan link playlist yang valid.{RESET}")
 
+# 4
+def play_music_spotify():
+    # ===== KONFIGURASI =====
+    CLIENT_ID = "2fc2c537fbef4a49ae788bc57e7ba7fc"
+    CLIENT_SECRET = "26ec19cc9ea74235ab0f3094ccf57f11"
+    # =======================
+
+    spotify_url = input(f"\n{GREEN}🎧Masukkan link Spotify: {RESET}").strip()
+
+    # Setup Spotify API
+    sp = spotipy.Spotify(
+        auth_manager=SpotifyClientCredentials(
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET
+        )
+    )
+
+    # ===== REGEX UNIVERSAL =====
+    match = re.search(
+        r"spotify\.com/(?:[a-zA-Z\-]+/)?(playlist|album|track|artist|show|episode)/([a-zA-Z0-9]+)",
+        spotify_url
+    )
+    if not match:
+        print("URL Spotify tidak valid atau tipe belum didukung.")
+        return
+
+    link_type = match.group(1)
+    spotify_id = match.group(2)
+    tracks = []
+
+    # ===== PLAYLIST =====
+    if link_type == "playlist":
+        results = sp.playlist_tracks(spotify_id)
+        while results:
+            for item in results['items']:
+                track = item['track']
+                if track:
+                    title = f"{track['name']} {track['artists'][0]['name']}"
+                    tracks.append(title)
+            if results['next']:
+                results = sp.next(results)
+            else:
+                break
+
+    # ===== ALBUM =====
+    elif link_type == "album":
+        results = sp.album_tracks(spotify_id)
+        for item in results['items']:
+            title = f"{item['name']} {item['artists'][0]['name']}"
+            tracks.append(title)
+
+    # ===== TRACK =====
+    elif link_type == "track":
+        track = sp.track(spotify_id)
+        title = f"{track['name']} {track['artists'][0]['name']}"
+        tracks.append(title)
+
+    # ===== ARTIST =====
+    elif link_type == "artist":
+        seen_tracks = set()
+        albums = sp.artist_albums(spotify_id, album_type='album,single', country='ID', limit=50)
+        album_ids = []
+        while True:
+            for album in albums['items']:
+                if album['id'] not in album_ids:
+                    album_ids.append(album['id'])
+            if albums['next']:
+                albums = sp.next(albums)
+            else:
+                break
+        for album_id in album_ids:
+            album_tracks = sp.album_tracks(album_id)
+            for item in album_tracks['items']:
+                track_name = f"{item['name']} {item['artists'][0]['name']}"
+                if track_name not in seen_tracks:
+                    tracks.append(track_name)
+                    seen_tracks.add(track_name)
+
+    # ===== SHOW =====
+    elif link_type == "show":
+        episodes = sp.show_episodes(spotify_id, limit=50)
+        while True:
+            for ep in episodes['items']:
+                tracks.append(ep['name'])
+            if episodes['next']:
+                episodes = sp.next(episodes)
+            else:
+                break
+
+    # ===== EPISODE =====
+    elif link_type == "episode":
+        episode = sp.episode(spotify_id)
+        tracks.append(episode['name'])
+
+    if not tracks:
+        print("Gagal mengambil daftar lagu/episode.")
+        return
+
+    tampil_kontrol()  # kalau mau menampilkan kontrol MPV di terminal
+
+    # ===== STREAM TANPA DOWNLOAD =====
+    for title in tracks:
+        print(f"▶ Memutar: {title}")
+        try:
+            url = subprocess.check_output(
+                ["yt-dlp", f"ytsearch1:{title}", "--get-url", "-f", "bestaudio"],
+                text=True
+            ).strip()
+            os.system(f"mpv --no-video '{url}'")
+        except KeyboardInterrupt:
+            print("\n⏹ Dihentikan.")
+            break
+
+# 5
 def download_audio():
     inp = input(f"\n{GREEN}⬇️ Masukkan judul atau link: {RESET}").strip()
     if "youtube.com" in inp or "youtu.be" in inp:
@@ -202,7 +319,7 @@ def download_audio():
     else:
         print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
 
- 
+#  6
 def download_video():
     def resolusi_to_label(res):
         match = re.search(r'(\d+)x(\d+)', res)
@@ -302,6 +419,7 @@ def download_video():
     else:
         print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
 
+# 7
 def download_video_any():
     inp = input(f"\n{GREEN}⬇️ Masukkan link video : {RESET}").strip()
     if not inp:
@@ -336,6 +454,7 @@ def download_video_any():
     else:
         print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
 
+# 8
 def download_audio_any():
     inp = input(f"\n{GREEN}⬇️ Masukkan link audio/video : {RESET}").strip()
     if not inp:
@@ -363,6 +482,34 @@ def download_audio_any():
     else:
         print(f"{RED}❌ Tidak ada file baru untuk dipindahkan.{RESET}")
 
+# 9
+def download_photo():
+    inp = input(f"\n{GREEN}⬇️ Masukkan link foto/album: {RESET}").strip()
+    if not inp:
+        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
+        return
+
+    # Cek apakah gallery-dl terpasang
+    try:
+        subprocess.run(["gallery-dl", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(f"{RED}❌ gallery-dl belum terpasang.{RESET}")
+        print(f"{YELLOW}💡 Install dengan: {CYAN}pip install gallery-dl{RESET}")
+        return
+
+    # Buat folder tujuan
+    save_dir = "/sdcard/Download/Photo"
+    os.makedirs(save_dir, exist_ok=True)
+
+    print(f"\n{YELLOW}🖼️ Mengunduh foto...{RESET}")
+    result = os.system(f"gallery-dl -d '{save_dir}' '{inp}'")
+
+    if result == 0:
+        print(f"{GREEN}✅ Foto berhasil diunduh ke: {save_dir}{RESET}")
+    else:
+        print(f"{RED}❌ Gagal mengunduh foto.{RESET}")
+
+# 10
 def download_spotify_music():
 
     # ===== KONFIGURASI =====
@@ -482,144 +629,7 @@ def download_spotify_music():
 
     print(f"\n✅ Semua file tersimpan di folder '{DOWNLOAD_DIR}'")
 
-def download_photo():
-    inp = input(f"\n{GREEN}⬇️ Masukkan link foto/album: {RESET}").strip()
-    if not inp:
-        print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
-        return
-
-    # Cek apakah gallery-dl terpasang
-    try:
-        subprocess.run(["gallery-dl", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        print(f"{RED}❌ gallery-dl belum terpasang.{RESET}")
-        print(f"{YELLOW}💡 Install dengan: {CYAN}pip install gallery-dl{RESET}")
-        return
-
-    # Buat folder tujuan
-    save_dir = "/sdcard/Download/Photo"
-    os.makedirs(save_dir, exist_ok=True)
-
-    print(f"\n{YELLOW}🖼️ Mengunduh foto...{RESET}")
-    result = os.system(f"gallery-dl -d '{save_dir}' '{inp}'")
-
-    if result == 0:
-        print(f"{GREEN}✅ Foto berhasil diunduh ke: {save_dir}{RESET}")
-    else:
-        print(f"{RED}❌ Gagal mengunduh foto.{RESET}")
-
-def play_music_spotify():
-    # ===== KONFIGURASI =====
-    CLIENT_ID = "2fc2c537fbef4a49ae788bc57e7ba7fc"
-    CLIENT_SECRET = "26ec19cc9ea74235ab0f3094ccf57f11"
-    # =======================
-
-    spotify_url = input(f"\n{GREEN}🎧Masukkan link Spotify: {RESET}").strip()
-
-    # Setup Spotify API
-    sp = spotipy.Spotify(
-        auth_manager=SpotifyClientCredentials(
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET
-        )
-    )
-
-    # ===== REGEX UNIVERSAL =====
-    match = re.search(
-        r"spotify\.com/(?:[a-zA-Z\-]+/)?(playlist|album|track|artist|show|episode)/([a-zA-Z0-9]+)",
-        spotify_url
-    )
-    if not match:
-        print("URL Spotify tidak valid atau tipe belum didukung.")
-        return
-
-    link_type = match.group(1)
-    spotify_id = match.group(2)
-    tracks = []
-
-    # ===== PLAYLIST =====
-    if link_type == "playlist":
-        results = sp.playlist_tracks(spotify_id)
-        while results:
-            for item in results['items']:
-                track = item['track']
-                if track:
-                    title = f"{track['name']} {track['artists'][0]['name']}"
-                    tracks.append(title)
-            if results['next']:
-                results = sp.next(results)
-            else:
-                break
-
-    # ===== ALBUM =====
-    elif link_type == "album":
-        results = sp.album_tracks(spotify_id)
-        for item in results['items']:
-            title = f"{item['name']} {item['artists'][0]['name']}"
-            tracks.append(title)
-
-    # ===== TRACK =====
-    elif link_type == "track":
-        track = sp.track(spotify_id)
-        title = f"{track['name']} {track['artists'][0]['name']}"
-        tracks.append(title)
-
-    # ===== ARTIST =====
-    elif link_type == "artist":
-        seen_tracks = set()
-        albums = sp.artist_albums(spotify_id, album_type='album,single', country='ID', limit=50)
-        album_ids = []
-        while True:
-            for album in albums['items']:
-                if album['id'] not in album_ids:
-                    album_ids.append(album['id'])
-            if albums['next']:
-                albums = sp.next(albums)
-            else:
-                break
-        for album_id in album_ids:
-            album_tracks = sp.album_tracks(album_id)
-            for item in album_tracks['items']:
-                track_name = f"{item['name']} {item['artists'][0]['name']}"
-                if track_name not in seen_tracks:
-                    tracks.append(track_name)
-                    seen_tracks.add(track_name)
-
-    # ===== SHOW =====
-    elif link_type == "show":
-        episodes = sp.show_episodes(spotify_id, limit=50)
-        while True:
-            for ep in episodes['items']:
-                tracks.append(ep['name'])
-            if episodes['next']:
-                episodes = sp.next(episodes)
-            else:
-                break
-
-    # ===== EPISODE =====
-    elif link_type == "episode":
-        episode = sp.episode(spotify_id)
-        tracks.append(episode['name'])
-
-    if not tracks:
-        print("Gagal mengambil daftar lagu/episode.")
-        return
-
-    tampil_kontrol()  # kalau mau menampilkan kontrol MPV di terminal
-
-    # ===== STREAM TANPA DOWNLOAD =====
-    for title in tracks:
-        print(f"▶ Memutar: {title}")
-        try:
-            url = subprocess.check_output(
-                ["yt-dlp", f"ytsearch1:{title}", "--get-url", "-f", "bestaudio"],
-                text=True
-            ).strip()
-            os.system(f"mpv --no-video '{url}'")
-        except KeyboardInterrupt:
-            print("\n⏹ Dihentikan.")
-            break
-
+# 11
 def update_dependencies():
     print(f"\n{CYAN}🔄 Mengecek koneksi internet...{RESET}")
     try:
