@@ -1,8 +1,8 @@
-pip install yt-dlp
-pip install ffmpeg
-pip install spotdl
-pip install gallery-dl
-pip install termcolor
-pip install pyfiglet
-pip install tabulate
-pip install spotipy
+yt-dlp
+ffmpeg
+spotdl
+gallery-dl
+termcolor
+pyfiglet
+tabulate
+spotipy
