@@ -7,7 +7,6 @@ import shutil
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-# Warna ANSI
 RED = '\033[91m'
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -129,7 +128,6 @@ def play_mix_manual():
         if direct_url:
             os.system(f"mpv --no-video '{direct_url}'")
 
-        # Loop untuk lagu berikutnya
         while True:
             hasil = subprocess.check_output(
                 f"yt-dlp 'ytsearch10:{judul}' --print '%(title)s|||%(webpage_url)s' -q",
@@ -140,8 +138,8 @@ def play_mix_manual():
                 print(f"{RED}❌ Tidak ada hasil yang ditemukan.{RESET}")
                 break
 
-            acak = random.choice(hasil)  # ambil lagu acak dari hasil pencarian
-            judul, url = acak.split("|||")  # update judul & url
+            acak = random.choice(hasil) 
+            judul, url = acak.split("|||") 
             direct_url = get_direct_url(url)
 
             if direct_url:
@@ -176,14 +174,11 @@ def play_playlist():
 
 # 4
 def play_music_spotify():
-    # ===== KONFIGURASI =====
     CLIENT_ID = "2fc2c537fbef4a49ae788bc57e7ba7fc"
     CLIENT_SECRET = "26ec19cc9ea74235ab0f3094ccf57f11"
-    # =======================
 
     spotify_url = input(f"\n{GREEN}🎧Masukkan link Spotify: {RESET}").strip()
 
-    # Setup Spotify API
     sp = spotipy.Spotify(
         auth_manager=SpotifyClientCredentials(
             client_id=CLIENT_ID,
@@ -191,7 +186,6 @@ def play_music_spotify():
         )
     )
 
-    # ===== REGEX UNIVERSAL =====
     match = re.search(
         r"spotify\.com/(?:[a-zA-Z\-]+/)?(playlist|album|track|artist|show|episode)/([a-zA-Z0-9]+)",
         spotify_url
@@ -204,7 +198,6 @@ def play_music_spotify():
     spotify_id = match.group(2)
     tracks = []
 
-    # ===== PLAYLIST =====
     if link_type == "playlist":
         results = sp.playlist_tracks(spotify_id)
         while results:
@@ -218,20 +211,17 @@ def play_music_spotify():
             else:
                 break
 
-    # ===== ALBUM =====
     elif link_type == "album":
         results = sp.album_tracks(spotify_id)
         for item in results['items']:
             title = f"{item['name']} {item['artists'][0]['name']}"
             tracks.append(title)
 
-    # ===== TRACK =====
     elif link_type == "track":
         track = sp.track(spotify_id)
         title = f"{track['name']} {track['artists'][0]['name']}"
         tracks.append(title)
 
-    # ===== ARTIST =====
     elif link_type == "artist":
         seen_tracks = set()
         albums = sp.artist_albums(spotify_id, album_type='album,single', country='ID', limit=50)
@@ -252,7 +242,6 @@ def play_music_spotify():
                     tracks.append(track_name)
                     seen_tracks.add(track_name)
 
-    # ===== SHOW =====
     elif link_type == "show":
         episodes = sp.show_episodes(spotify_id, limit=50)
         while True:
@@ -263,7 +252,6 @@ def play_music_spotify():
             else:
                 break
 
-    # ===== EPISODE =====
     elif link_type == "episode":
         episode = sp.episode(spotify_id)
         tracks.append(episode['name'])
@@ -272,9 +260,8 @@ def play_music_spotify():
         print("Gagal mengambil daftar lagu/episode.")
         return
 
-    tampil_kontrol()  # kalau mau menampilkan kontrol MPV di terminal
+    tampil_kontrol()
 
-    # ===== STREAM TANPA DOWNLOAD =====
     for title in tracks:
         print(f"▶ Memutar: {title}")
         try:
@@ -297,13 +284,11 @@ def download_audio():
         if not url:
             return
 
-    # Ambil daftar file sebelum download
     before = set(glob.glob("*.mp3"))
 
     print(f"\n{YELLOW}🎵 Mengunduh audio...{RESET}")
     os.system(f"yt-dlp -x --audio-format mp3 -o '%(title)s.%(ext)s' '{url}'")
 
-    # Ambil daftar file setelah download
     after = set(glob.glob("*.mp3"))
     new_files = after - before
 
@@ -397,13 +382,11 @@ def download_video():
     format_id = list(format_dict.keys())[index - 1]
     label = list(format_dict.values())[index - 1]
 
-    # Simpan file sebelum download
     before = set(glob.glob("*.mp4"))
 
     print(f"\n{YELLOW}📽️ Mengunduh video resolusi {label}...{RESET}")
     os.system(f"yt-dlp -f {format_id}+bestaudio --merge-output-format mp4 -o '%(title)s.%(ext)s' '{url}'")
 
-    # Ambil file setelah download
     after = set(glob.glob("*.mp4"))
     new_files = after - before
 
@@ -425,20 +408,16 @@ def download_video_any():
         print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
         return
 
-    # Simpan file sebelum download
     before = set(glob.glob("*.mp4"))
 
     print(f"\n{YELLOW}📽️ Mengunduh video...{RESET}")
     
-    # Coba format bestvideo+bestaudio dulu
     result = os.system(f"yt-dlp -f bestvideo+bestaudio --merge-output-format mp4 -o '%(title)s.%(ext)s' '{inp}'")
     
-    # Jika gagal, coba format best (gabung otomatis jika hanya 1 stream)
     if result != 0:
         print(f"{YELLOW}⚠️ Format terpisah tidak tersedia, mencoba format tunggal...{RESET}")
         os.system(f"yt-dlp -f best --merge-output-format mp4 -o '%(title)s.%(ext)s' '{inp}'")
 
-    # Ambil file setelah download
     after = set(glob.glob("*.mp4"))
     new_files = after - before
 
@@ -460,13 +439,11 @@ def download_audio_any():
         print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
         return
 
-    # Ambil daftar file sebelum download
     before = set(glob.glob("*.mp3"))
 
     print(f"\n{YELLOW}🎵 Mengunduh audio...{RESET}")
     os.system(f"yt-dlp -x --audio-format mp3 -o '%(title)s.%(ext)s' '{inp}'")
 
-    # Ambil daftar file setelah download
     after = set(glob.glob("*.mp3"))
     new_files = after - before
 
@@ -488,7 +465,6 @@ def download_photo():
         print(f"{RED}❌ Link tidak boleh kosong.{RESET}")
         return
 
-    # Cek apakah gallery-dl terpasang
     try:
         subprocess.run(["gallery-dl", "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -496,7 +472,6 @@ def download_photo():
         print(f"{YELLOW}💡 Install dengan: {CYAN}pip install gallery-dl{RESET}")
         return
 
-    # Buat folder tujuan
     save_dir = "/sdcard/Download/Photo"
     os.makedirs(save_dir, exist_ok=True)
 
@@ -511,17 +486,14 @@ def download_photo():
 # 10
 def download_spotify_music():
 
-    # ===== KONFIGURASI =====
     CLIENT_ID = "48fb05aa18f74092abe88882b281eebf"
     CLIENT_SECRET = "083099b34cbf48679078faa17c9a2740"
-    DOWNLOAD_DIR = "/sdcard/Download/Music"  # folder untuk menyimpan file
-    # =======================
+    DOWNLOAD_DIR = "/sdcard/Download/Music" 
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
     spotify_url = input(f"\n{GREEN}Masukkan link Spotify: {RESET}").strip()
 
-    # Setup Spotify API
     sp = spotipy.Spotify(
         auth_manager=SpotifyClientCredentials(
             client_id=CLIENT_ID,
@@ -529,7 +501,6 @@ def download_spotify_music():
         )
     )
 
-    # ===== REGEX UNIVERSAL =====
     match = re.search(
         r"spotify\.com/(?:[a-zA-Z\-]+/)?(playlist|album|track|artist|show|episode)/([a-zA-Z0-9]+)",
         spotify_url
@@ -542,7 +513,6 @@ def download_spotify_music():
     spotify_id = match.group(2)
     tracks = []
 
-    # ===== PLAYLIST =====
     if link_type == "playlist":
         results = sp.playlist_tracks(spotify_id)
         while results:
@@ -556,20 +526,17 @@ def download_spotify_music():
             else:
                 break
 
-    # ===== ALBUM =====
     elif link_type == "album":
         results = sp.album_tracks(spotify_id)
         for item in results['items']:
             title = f"{item['name']} {item['artists'][0]['name']}"
             tracks.append(title)
 
-    # ===== TRACK =====
     elif link_type == "track":
         track = sp.track(spotify_id)
         title = f"{track['name']} {track['artists'][0]['name']}"
         tracks.append(title)
 
-    # ===== ARTIST =====
     elif link_type == "artist":
         seen_tracks = set()
         albums = sp.artist_albums(spotify_id, album_type='album,single', country='ID', limit=50)
@@ -590,7 +557,6 @@ def download_spotify_music():
                     tracks.append(track_name)
                     seen_tracks.add(track_name)
 
-    # ===== SHOW (podcast) =====
     elif link_type == "show":
         episodes = sp.show_episodes(spotify_id, limit=50)
         while True:
@@ -601,7 +567,6 @@ def download_spotify_music():
             else:
                 break
 
-    # ===== EPISODE =====
     elif link_type == "episode":
         episode = sp.episode(spotify_id)
         tracks.append(episode['name'])
@@ -610,7 +575,6 @@ def download_spotify_music():
         print("Gagal mengambil daftar lagu/episode.")
         return
 
-    # ===== DOWNLOAD =====
     for title in tracks:
         print(f"⬇ Mengunduh: {title}")
         try:
@@ -632,7 +596,6 @@ def download_spotify_music():
 def update_dependencies():
     print(f"\n{CYAN}🔄 Mengecek koneksi internet...{RESET}")
     try:
-        # Tes koneksi dengan ping google
         status = os.system("ping -c 1 google.com > /dev/null 2>&1")
         if status != 0:
             print(f"{RED}❌ Tidak ada koneksi internet. Periksa jaringan kamu dulu.{RESET}")
@@ -643,31 +606,16 @@ def update_dependencies():
 
     print(f"\n{CYAN}🔄 Mengupdate & Menginstall semua dependensi...{RESET}")
     try:
-        # Update python + pip bawaan
         os.system("pkg install -y python")
         os.system("pkg upgrade -y python")
-
-        # Update yt-dlp (via pip dan pkg agar aman di Termux)
         os.system("pip install -U yt-dlp")
         os.system("pkg install -y yt-dlp")
-
-        # Install Spotify API wrapper (spotipy)
         os.system("pip install spotipy")
-
-        # Install dependensi tambahan
         os.system("pip install requests termcolor pyfiglet")
-
-        # Install mpv untuk pemutar musik
         os.system("pkg install -y mpv")
-
-        # Install ffmpeg untuk konversi audio/video
         os.system("pkg install -y ffmpeg")
 
         print(f"\n{GREEN}✅ Semua dependensi sudah diupdate!{RESET}\n")
-
-        # =========================================================
-        # 🔍 Langsung cek semua versi setelah update
-        # =========================================================
         print(f"\n{CYAN}📌 Versi dependensi setelah update:{RESET}\n")
 
         print(f"{CYAN}▶ Python:{RESET}")
